@@ -2,17 +2,20 @@
 FROM customer GROUP BY job_industry_category ORDER BY customer_count DESC;
 
 ![image](https://github.com/user-attachments/assets/27642509-2835-4a6c-bbd1-7b4c4fc67e25)
+
 2. SELECT customer.job_industry_category ,date_trunc('month', to_date(transaction.transaction_date, 'DD.MM.YYYY')) 
 AS transaction_month ,sum(transaction.list_price) AS transaction_sum FROM transaction JOIN customer ON customer.customer_id = transaction.customer_id 
 GROUP BY customer.job_industry_category, transaction_month ORDER BY customer.job_industry_category, transaction_month;
 
 ![image](https://github.com/user-attachments/assets/4c2ac690-cc29-48e3-9bf5-b68180bd909d)
+
 3. SELECT transaction.brand AS brand, COUNT(transaction.transaction_id) AS online_order_count
 FROM transaction JOIN customer ON transaction.customer_id = customer.customer_id
 WHERE customer.job_industry_category = 'IT' AND transaction.online_order = 'True' AND transaction.order_status = 'Approved'
 GROUP BY transaction.brand;
 
 ![image](https://github.com/user-attachments/assets/f54d510e-8642-48fd-bdab-ac5cdf2e5a9a)
+
 4.SELECT customer.customer_id, 
     SUM(transaction.list_price) AS total_transaction_amount,
     MAX(transaction.list_price) AS max_transaction_amount, 
@@ -22,6 +25,7 @@ FROM transaction JOIN customer ON transaction.customer_id = customer.customer_id
 GROUP BY customer.customer_id ORDER BY total_transaction_amount DESC, transaction_count DESC;
 
 ![image](https://github.com/user-attachments/assets/18774b42-279e-49f1-9ce8-8f5b40398580)
+
 SELECT DISTINCT customer.customer_id,
     SUM(transaction.list_price) OVER (PARTITION BY customer.customer_id) AS total_transaction_amount,
     MAX(transaction.list_price) OVER (PARTITION BY customer.customer_id) AS max_transaction_amount,
@@ -31,6 +35,7 @@ FROM transaction JOIN customer ON transaction.customer_id = customer.customer_id
 ORDER BY total_transaction_amount DESC, transaction_count DESC;
 
 ![image](https://github.com/user-attachments/assets/7b98db89-fbe0-4c3d-9537-45f658810f26)
+
 5. Максимум:
  SELECT customer.first_name, customer.last_name, SUM(transaction.list_price) AS total_transaction_amount
 FROM transaction JOIN customer ON transaction.customer_id = customer.customer_id
@@ -48,6 +53,7 @@ HAVING SUM(transaction.list_price) = (SELECT MIN(total_amount)
 FROM (SELECT SUM(transaction.list_price) AS total_amount FROM transaction GROUP BY transaction.customer_id) AS min_transactions);
 
 ![image](https://github.com/user-attachments/assets/be0975a3-3341-4e3e-825b-90d6ff58c84d)
+
 6.WITH ranked_transactions AS (SELECT transaction.transaction_id, transaction.customer_id, transaction.transaction_date, transaction.list_price,
 ROW_NUMBER() OVER (PARTITION BY transaction.customer_id ORDER BY transaction.transaction_date) AS rn
 FROM transaction)
