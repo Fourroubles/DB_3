@@ -62,17 +62,50 @@ FROM ranked_transactions WHERE rn = 1;
 
 ![image](https://github.com/user-attachments/assets/7352da73-45f8-41bc-b7a5-7bf3c0d60341)
 
-7.WITH transaction_date AS (select transaction.customer_id,  customer.first_name,  customer.last_name,  customer.job_title, TO_DATE(transaction.transaction_date, 'DD.MM.YYYY') AS transaction_date
-FROM transaction  JOIN customer ON customer.customer_id = transaction.customer_id),
-lagged_date AS (select transaction_date.customer_id,transaction_date.first_name, transaction_date.last_name, transaction_date.job_title,transaction_date.transaction_date,
-LAG(transaction_date.transaction_date) 
-OVER (PARTITION BY transaction_date.customer_id ORDER BY transaction_date.transaction_date) AS prev_transaction_date FROM transaction_date),
-date_difference AS (select lagged_date.customer_id,lagged_date.first_name,lagged_date.last_name,lagged_date.job_title, lagged_date.transaction_date,lagged_date.prev_transaction_date,
-(lagged_date.transaction_date - lagged_date.prev_transaction_date) 
-AS day_difference FROM lagged_date WHERE lagged_date.prev_transaction_date IS NOT NULL),
-max_difference AS (SELECT MAX(date_difference.day_difference) AS max_day_difference FROM date_difference)
-SELECT date_difference.first_name,date_difference.last_name,date_difference.job_title,date_difference.day_difference
-FROM date_difference JOIN max_difference ON max_difference.max_day_difference = date_difference.day_difference
+7.WITH transaction_date AS (
+    SELECT
+        transaction.customer_id,
+        customer.first_name,
+        customer.last_name,
+        customer.job_title,
+        TO_DATE(transaction.transaction_date, 'DD.MM.YYYY') AS transaction_date
+    FROM transaction
+    JOIN customer ON customer.customer_id = transaction.customer_id
+),
+lagged_date AS (
+    SELECT
+        transaction_date.customer_id,
+        transaction_date.first_name,
+        transaction_date.last_name,
+        transaction_date.job_title,
+        transaction_date.transaction_date,
+        LAG(transaction_date.transaction_date) OVER (PARTITION BY transaction_date.customer_id ORDER BY transaction_date.transaction_date) AS prev_transaction_date
+    FROM transaction_date
+),
+date_difference AS (
+    SELECT
+        lagged_date.customer_id,
+        lagged_date.first_name,
+        lagged_date.last_name,
+        lagged_date.job_title,
+        lagged_date.transaction_date,
+        lagged_date.prev_transaction_date,
+        (lagged_date.transaction_date - lagged_date.prev_transaction_date) AS day_difference
+    FROM lagged_date
+    WHERE lagged_date.prev_transaction_date IS NOT NULL
+),
+max_difference AS (
+    SELECT
+        MAX(date_difference.day_difference) AS max_day_difference
+    FROM date_difference
+)
+SELECT
+    date_difference.first_name,
+    date_difference.last_name,
+    date_difference.job_title,
+    date_difference.day_difference
+FROM date_difference
+JOIN max_difference ON max_difference.max_day_difference = date_difference.day_difference
 ORDER BY date_difference.day_difference DESC;
 
 ![image](https://github.com/user-attachments/assets/6d939068-a489-4e28-aefd-c5de98f439d6)
